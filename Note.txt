@@ -1,0 +1,444 @@
+Template driven form 	-- in the C:\react\Angular-ReactiveForms-master\Demo-Start folder
+Reactive form 		-- in the C:\react\Angular-ReactiveForms-master\APM folder
+
+
+https://github.com/DeborahK/Angular-ReactiveForms
+http://blogs.msmvps.com/deborahk/angular-2-reactive-forms-problem-solver/
+
+Lecture Notes: C:\react\angular-2-reactive-forms
+
+https://stackoverflow.com/questions/13341698/javascript-plus-sign-in-front-of-function-name
+	+ is usually used to force numerical casting of a value as this SO answer explains. In this instance it is called the 'unary plus operator' (for ease of googling).
+https://blog.ninja-squad.com/2018/05/04/what-is-new-angular-6/
+
+
+What's good to take for this course:
+1. Complex situation that the application handles:
+- Adjusting Validation Rules at Runtime 
+	Only validate phone number if notification radio button is ticked on text option.
+- Custom Validator && Custom Validators with Parameters
+	For Rating input field, can only enter 1-5
+- Cross-field validation: 
+	Confirm email field must be the same as email field. ( Or validate start day must be before end day.)
+	When it doesn't match email, both fields will have red border and a error msg underneath the confirm email field.
+
+2. Others:
+- Do debounce to let user finish typing before validation kick in.
+- Remind user to save before leaving the form (canDeactivate)
+
+
+
+#########################################
+## Template-driven vs. Reactive Forms ###
+#########################################
+Value Changed: pristine | dirty
+Validity: valid | errors
+Visited: touched | untouched
+
+These states define whether the user has changed a value in an input element. 
+If the value is unchanged, the state of the input element is pristine. Changed values have a state of dirty. 
+If all input elements on a form are pristine, then the form itself is pristine. 
+If any input element on the form is dirty, then the form state is dirty. 
+
+A value of touched means the user has set focus into the input element and then left the input element. 
+Untouched is set if the user has not set focus, then left the input element. 
+A form is touched if any input element has been touched.
+
+HTML Form
+---------------
+<form (ngSubmit)="save()">
+  <input id="firstNameId" type="text"
+      [(ngModel)]="customer.firstName"
+      name="firstName"
+      #firstNameVar="ngModel"/>
+  <button type="submit"
+      [disabled]="!signupForm.valid">
+    Save
+  </button>
+</form>
+
+Template-driven Form
+--------------------------
+<form (ngSubmit)="save()">
+  <div>
+    <label for="firstNameId">First Name</label>
+    <input id="firstNameId" type="text"
+           placeholder="First Name (required)"
+           required
+           minlength="3"
+           [(ngModel)]="customer.firstName"
+           name="firstName"		<<< Template-driven forms require the name attribute to properly associate the FormControl with the FormGroup in the generated form model.
+           #firstNameVar="ngModel"	<<< And here we define a template reference variable to access the FormControl instance.
+					    (We define the template reference variable to use for validation styling and messages.)
+           [ngClass]="{'is-invalid': firstNameVar.touched && !firstNameVar.valid }" />		<<< We use the defined template reference variable and check the FormControl state properties to determine whether or not to style the input element as an error.
+    <span *ngIf="firstNameVar.errors">
+      Please enter your first name.
+    </span>
+  </div>
+  ...
+  <button type="submit">Save</button>
+</form>
+
+Reactive Form
+-------------------
+<form (ngSubmit)="save()" [formGroup]="signupForm">
+  <div>
+    <label for="firstNameId">First Name</label>
+    <input id="firstNameId" type="text"
+           placeholder="First Name (required)"
+           formControlName="firstName"
+           [ngClass]="{'is-invalid': formError.firstName }" />
+    <span *ngIf="formError.firstName">
+      {{formError.firstName}}
+    </span>
+  </div>
+  ...
+  <button type="submit">Save</button>
+</form>
+
+The bottom line here is that the template-driven form's approach minimizes the component class code we need to write, but it is heavy on the template code. 
+
+Template driven form does not handle well for the following situations, it will create complex html form that is hard to mantain:
+- Dynamically add input elements
+- Watch what the user types
+- Wait validation until typing stops
+- Different validation for different situations
+- Immutable data structures
+
+
+#########################################
+### Building a Reactive Form ############
+#########################################
+
+
+<form (ngSubmit)="save()" [formGroup]="customerForm">
+...
+</form>
+We use square brackets to denote property binding and assign it to the form model property from our component class. 
+The form then knows not to build its own form model and to instead use the one defined by the customerForm property.
+
+
+Accessing the Form Model Properties
+customerForm.controls.firstName.valid
+customerForm.get('firstName').valid
+
+
+Set all values:
+--------------------
+this.customerForm.setValue({
+  firstName: 'Jack',
+  lastName: 'Harkness',
+  email: 'jack@torchwood.com'
+});
+
+Set part of the values:
+-------------------------------
+this.customerForm.patchValue({
+  firstName: 'Jack',
+  lastName: 'Harkness'
+});
+
+
+FormBuilder's FormControl Syntax
+this.customerForm = this.fb.group({
+	firstName: '',
+	sendCatalog: true
+});
+this.customerForm = this.fb.group({
+	firstName: {value: 'n/a', disabled: true},
+		sendCatalog: {value: true, disabled: false}
+});
+this.customerForm = this.fb.group({
+	firstName: [''],
+	sendCatalog: [{value: true, disabled: false}]		<<  The next two elements of the array, not shown here, define the validation rules.
+});
+
+
+########################
+### Validation #########
+########################
+
+Setting Built-in Validation Rules
+this.customerForm= this.fb.group({
+	firstName: ['', Validators.required],
+	sendCatalog:true
+});
+this.customerForm= this.fb.group({
+	firstName: ['', [Validators.required, Validators.minLength(3)]],	<< The third element of the array, which is not shown here, is for any asynchronous validators.
+	sendCatalog:true
+});
+
+
+Adjusting Validation Rules at Runtime
+myControl.setValidators(Validators.required);
+myControl.setValidators([Validators.required,Validators.maxLength(30)]);
+myControl.clearValidators();
+myControl.updateValueAndValidity();
+
+
+Custom Validator
+-------------------------
+function myValidator(c: AbstractControl): {[key: string]: boolean} | null {
+	if(somethingIsWrong) {
+		return{ 'myvalidator': true};
+	}
+	return null;
+}
+
+Custom Validator with Parameters
+------------------------------------
+function myValidator(param: any): ValidatorFn {		<-- Factory function.
+	return (c: AbstractControl): {[key: string]: boolean} | null => {
+		if(somethingIsWrong) {
+			return{ 'myvalidator': true};
+		}
+		return null;
+	};
+}
+Or:
+Wrap the validator function in a factory function -->
+function myValidator(param: any): ValidatorFn {
+	return (c: AbstractControl): {[key: string]: boolean} | null => {
+		if(c.value === param) {
+		return { 'thisvalidator': true};
+	}
+	return null;
+}}
+Use it like any other validator -->
+this.customerForm = this.fb.group({
+	firstName: ['', myValidator('test')]
+});
+
+
+Cross-field Validation: Nested FormGroup
+-----------------------------------------------
+this.customerForm= this.fb.group({
+	firstName: ['', [Validators.required, Validators.minLength(3)]],
+	lastName: ['', [Validators.required, Validators.maxLength(50)]],
+	availability: this.fb.group({
+		start: [null, Validators.required],
+		end: [null, Validators.required]
+	}, { validator: dateCompare})
+});
+function dateCompare(c: AbstractControl) {
+	if (c.get('start').value !== c.get('end').value) {
+		return{ 'match': true};
+	}
+	return null;	// null means no error....
+}
+<div formGroupName="availability">
+	...
+	<input formControlName="start"/>
+	...
+	<input formControlName="end"/>
+</div>
+
+
+Cross-field Validation: Custom Validator
+------------------------------------------------
+function dateCompare (c:AbstractControl): {[key: string]: boolean} | null {
+	let startControl = c.get('start');
+	let endControl = c.get('end');
+	if(startControl.value !== endControl.value) {
+		return { 'match': true};
+	}
+	return null;
+}
+this.customerForm= this.fb.group({
+	firstName: ['', [Validators.required, Validators.minLength(3)]],
+	lastName: ['', [Validators.required, Validators.maxLength(50)]],
+	availability: this.fb.group({
+		start: ['', Validators.required],
+		end: ['', Validators.required]
+	}, { validator: dateCompare})
+});
+
+
+#################################
+### Reacting to Changes	#########
+#################################
+
+const phoneControl = this.customerForm.get('phone');
+phoneControl.valueChanges.subscribe();
+
+this.myFormControl.valueChanges.subscribe(value => console.log(value));
+	==> For the FomrControl
+this.myFormGroup.valueChanges.subscribe(value => console.log(JSON.stringify(value)));
+	==> Will do for all FormControls and any nested FromGroup within the form.
+this.customerForm.valueChanges.subscribe(value => console.log(JSON.stringify(value)));
+	==> For entire form.
+
+Reacting (What you can do with the subscription)
+- Adjust validation rules 
+- Handle validation messages
+- Modify user interface elements
+- Provide automatic suggestions
+
+debounceTime
+• Ignores events until a specific time has passed without another event
+• debounceTime(1000)waits for 1000 milliseconds (1 sec) of no events before emitting another event	<< Userful when use typing input.
+
+throttleTime
+•Emits a value, then ignores subsequent values for a specific amount of time	<< Useful when you receive way too many events when tracking mouse movement.
+
+distinctUntilChanged
+•Suppresses duplicate consecutive items
+
+##################################################
+### Dynamically Duplicate Input Elements #########
+##################################################
+
+Benefits of a FormGroup
+- Match the value of the form model to the data model
+- Check touched, dirty, and valid state
+- Watch for changes and react
+- Perform cross field validation
+- Dynamically duplicate the group
+
+FormArray can to any combination of FormControl and FromGroup. But suggest to keep all the items alike. e.g.		<< use for dynamically genereate FormControl or FormGroup
+FormArray:
+  FormGroup
+  FormGroup
+  FormGroup
+FormArray:
+  FormControl
+  FormControl
+  FormControl
+
+Creating a FormArray
+this.myArray= newFormArray([...]);
+this.myArray= this.fb.array([...]);
+
+
+######################################
+### Reactive Form in Context #########
+######################################
+
+Routing Steps
+- Configure routes
+- Activate routes
+- Place result
+
+Configuring Routes
+=============================
+C:\react\Angular-ReactiveForms-master\src\app\products\product.module.ts
+    RouterModule.forChild([
+      { path: 'products', component: ProductListComponent },
+      { path: 'products/:id', component: ProductDetailComponent },
+      {
+        path: 'products/:id/edit',
+        canDeactivate: [ProductEditGuard],
+        component: ProductEditComponent
+      }
+    ])
+
+
+C:\react\Angular-ReactiveForms-master\src\app\app.component.ts
+      <ul class='navbar-nav'>
+        <li class='nav-item'><a class='nav-link' routerLinkActive='active'
+              [routerLink]="['/welcome']">Home</a>				<<<< Tying Routes to Actions
+        </li>
+        <li class='nav-item'><a class='nav-link' routerLinkActive='active' [routerLinkActiveOptions]="{exact: true}"
+              [routerLink]="['/products']">Product List</a>
+        </li>
+        <li class='nav-item'><a class='nav-link' routerLinkActive='active' [routerLinkActiveOptions]="{exact: true}"
+              [routerLink]="['/products/0/edit']">Add Product</a>
+        </li>
+      </ul>
+      ....
+      <router-outlet></router-outlet>		<<<< Placing the Views. Each page is displayed here
+
+
+
+
+C:\react\Angular-ReactiveForms-master\src\app\products\product-list.component.html
+              <button class="btn btn-outline-primary btn-sm"
+                      [routerLink]="['/products', product.id, 'edit']">
+                Edit
+              </button>
+
+
+C:\react\Angular-ReactiveForms-master\src\app\products\product-detail.component.html
+        <button class="btn btn-outline-primary"
+                style="width:80px"
+                [routerLink]="['/products', product.id, 'edit']">
+          Edit
+        </button>
+
+
+Reading Parameters from a Route
+=======================================
+constructor(private route: ActivatedRoute) {
+	let id = +this.route.snapshot.paramMap.get('id');	<< Only get once
+	...
+}
+
+constructor(private route: ActivatedRoute) {
+	this.sub = this.route.paramMap.subscribe(		<< Can react anytime the id got changed.
+		params => {
+			const id = +params.get('id');
+			...
+		}
+	);
+}
+
+
+Building a Guard
+======================
+import { Injectable } from '@angular/core';
+import { CanDeactivate } from '@angular/router';
+@Injectable({
+	providedIn: 'root'
+})
+export class ProductEditGuard implements CanDeactivate<ProductEditComponent> {
+	canDeactivate(component: ProductEditComponent): boolean {
+		...
+	}
+}
+
+
+################################################################
+### Create, Read, Update, and Delete (CRUD) Using HTTP #########
+################################################################
+
+Faking a Backend Server
+- Directly return hard-coded data
+- Use a JSON file
+- Write our own code using MockBackend
+- Use angular-in-memory-web-api
+
+
+Post vs Put
+POST (api/products)		<< I have some product data, proces it. without specific any ID.
+Posts data for a resource or set of resources
+Used to:
+• Create a new resource when the server assigns the Id
+• Update a set of resources
+Not idempotent			<< Issuing multiple request will not have the same effect as multiple put calls. It will just keep creating production.
+
+PUT (api/products/5)		<< Replace the product if the ID exist, if not found, create it.
+Puts data for a specific resource with an Id
+Used to:
+• Create a new resource when the client assigns the Id
+• Update the resource with the Id
+Idempotent			<< means multiple put call will not have effect if the input parameter is the same.
+
+
+#########################
+### Final Words #########
+#########################
+
+Angular Forms
+Template-driven
+Easy to use
+Similar to AngularJS
+Two-way data binding -> Minimal component code
+Automatically tracks form and input element state
+
+Reactive
+More flexible -> more complex scenarios
+Immutable data model
+Easier to perform an action on a value change
+Reactive transformations ->DebounceTimeor DistinctUntilChanged
+Easily add input elements dynamically
+Easier unit testing

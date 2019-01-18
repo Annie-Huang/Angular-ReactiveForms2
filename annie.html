@@ -1,0 +1,14 @@
+<form (ngSubmit)="save()" [formGroup]="signupForm">
+  <div>
+    <label for="firstNameId">First Name</label>
+    <input id="firstNameId" type="text"
+           placeholder="First Name (required)"
+           formControlName="firstName"
+           [ngClass]="{'is-invalid': formError.firstName }" />
+    <span *ngIf="formError.firstName">
+      {{formError.firstName}}
+    </span>
+  </div>
+  ...
+  <button type="submit">Save</button>
+</form>
