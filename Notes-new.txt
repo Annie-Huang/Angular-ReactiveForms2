@@ -1,0 +1,132 @@
+HTML Directive: formGroup | formControl | formControlName | formGroupName | formArrayName
+TS Class: FormGroup | FormControl | patchValue | setValue | FormBuilder
+
+##########################################################################################################
+TS file:
+export class CustomerComponent implements OnInit {
+  // Root FormGroup.
+  customerForm: FormGroup;                 <<<<<<< Need to match, point A
+  customer = new Customer();
+
+  ngOnInit() {
+    // We selected to use ngOnInit (rather than the constructor) to ensure the component and template are initialized before building the form model.
+    this.customerForm = new FormGroup({
+      firstName : new FormControl(),      <<<<<<< Need to match, point B
+      lastName : new FormControl(),
+      email : new FormControl(),
+      sendCatalog : new FormControl(true)
+    });
+  }
+  populateTestData(): void {
+    // Change value for a subset of the formcontrol. Or use setValue for all values in the form
+    this.customerForm.patchValue({
+      firstName : 'Jack',
+      lastName : 'Harkness',
+      sendCatalog : false
+    });
+  }
+}
+
+HTML file:
+<form novalidate (ngSubmit)="save()" [formGroup]="customerForm">    <<<<<<< Need to match, point A
+  <div>
+    <label for="firstNameId">First Name</label>
+    <input id="firstNameId" type="text"
+           placeholder="First Name (required)"
+           formControlName="firstName" />                           <<<<<<< Need to match, point B
+    <span ...>
+        ...
+    </span>
+  </div>
+
+  <div>
+    <button class="btn btn-primary mr-3"
+            type="submit"
+            style="width:80px"
+            [title]="customerForm.valid ? 'Save your entered data' : 'Disabled until the form data is valid'"           <<<<<<< Need to match, point A
+            [disabled]="!customerForm.valid">                                                                           <<<<<<< Need to match, point A
+      Save
+    </button>
+    <button class="btn btn-outline-secondary"
+            type="button"
+            (click)="populateTestData()">
+      Test Data
+    </button>
+  </div>
+</form>
+
+
+Note:
+1. To access From model properties to check validness:
+- customerForm.controls.firstName.valid
+- customerForm.get('firstName').valid
+
+2. To set the input values in template from the TS file
+this.customerForm.setValue({          <<< Set all values
+  firstName: 'Jack',
+  lastName: 'Harkness',
+  email: 'jack@torchwood.com'
+});
+this.customerForm.patchValue({        <<< Set part of the values
+  firstName: 'Jack',
+  lastName: 'Harkness'
+});
+recipientGroup.get('name').setValue(shipment.to.name)
+recipientGroup.get('name').patchValue(shipment.to.name)
+
+
+##########################################################################################################
+
+
+FormBuilder VS 'FormGroup | FormControl'
+
+export class CustomerComponent implements OnInit {
+  // Root FormGroup.
+  customerForm: FormGroup;
+  customer = new Customer();
+
+  constructor(private fb: FormBuilder) { }
+
+  ngOnInit() {
+    this.customerForm = new FormGroup({lastName : new FormControl(),});
+
+    // The above can be replease with
+    this.customerForm = this.fb.group({lastName : '',});
+    this.customerForm = this.fb.group({lastName : {value: 'n/a', disabled: true}   });
+    this.customerForm = this.fb.group({lastName : [{value: true, disabled: false}] });
+    this.customerForm = this.fb.group({lastName : ['', [Validators.required, Validators.maxLength(50)]]  });
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

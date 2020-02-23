@@ -1,3 +1,7 @@
+https://github.com/Annie-Huang/Angular-ReactiveForms2
+https://github.com/DeborahK/Angular-ReactiveForms
+
+
 Template driven form 	-- in the C:\react\Angular-ReactiveForms-master\Demo-Start folder
 Reactive form 		-- in the C:\react\Angular-ReactiveForms-master\APM folder
 
@@ -11,14 +15,15 @@ https://stackoverflow.com/questions/13341698/javascript-plus-sign-in-front-of-fu
 	+ is usually used to force numerical casting of a value as this SO answer explains. In this instance it is called the 'unary plus operator' (for ease of googling).
 https://blog.ninja-squad.com/2018/05/04/what-is-new-angular-6/
 
+==================================================================================
 
 What's good to take for this course:
 1. Complex situation that the application handles:
-- Adjusting Validation Rules at Runtime 
+- Adjusting Validation Rules at Runtime
 	Only validate phone number if notification radio button is ticked on text option.
 - Custom Validator && Custom Validators with Parameters
 	For Rating input field, can only enter 1-5
-- Cross-field validation: 
+- Cross-field validation:
 	Confirm email field must be the same as email field. ( Or validate start day must be before end day.)
 	When it doesn't match email, both fields will have red border and a error msg underneath the confirm email field.
 
@@ -35,13 +40,13 @@ Value Changed: pristine | dirty
 Validity: valid | errors
 Visited: touched | untouched
 
-These states define whether the user has changed a value in an input element. 
-If the value is unchanged, the state of the input element is pristine. Changed values have a state of dirty. 
-If all input elements on a form are pristine, then the form itself is pristine. 
-If any input element on the form is dirty, then the form state is dirty. 
+These states define whether the user has changed a value in an input element.
+If the value is unchanged, the state of the input element is pristine. Changed values have a state of dirty.
+If all input elements on a form are pristine, then the form itself is pristine.
+If any input element on the form is dirty, then the form state is dirty.
 
-A value of touched means the user has set focus into the input element and then left the input element. 
-Untouched is set if the user has not set focus, then left the input element. 
+A value of touched means the user has set focus into the input element and then left the input element.
+Untouched is set if the user has not set focus, then left the input element.
 A form is touched if any input element has been touched.
 
 HTML Form
@@ -96,7 +101,7 @@ Reactive Form
   <button type="submit">Save</button>
 </form>
 
-The bottom line here is that the template-driven form's approach minimizes the component class code we need to write, but it is heavy on the template code. 
+The bottom line here is that the template-driven form's approach minimizes the component class code we need to write, but it is heavy on the template code.
 
 Template driven form does not handle well for the following situations, it will create complex html form that is hard to mantain:
 - Dynamically add input elements
@@ -110,11 +115,18 @@ Template driven form does not handle well for the following situations, it will 
 ### Building a Reactive Form ############
 #########################################
 
+FormGroup:
+    constructor(controls: {
+        [key: string]: AbstractControl;
+    },
+FormControl:
+    constructor(formState?: any, validatorOrOpts?: ValidatorFn | ValidatorFn[] | AbstractControlOptions | null, asyncValidator?: AsyncValidatorFn | AsyncValidatorFn[] | null);
+
 
 <form (ngSubmit)="save()" [formGroup]="customerForm">
 ...
 </form>
-We use square brackets to denote property binding and assign it to the form model property from our component class. 
+We use square brackets to denote property binding and assign it to the form model property from our component class.
 The form then knows not to build its own form model and to instead use the one defined by the customerForm property.
 
 
@@ -122,6 +134,7 @@ Accessing the Form Model Properties
 customerForm.controls.firstName.valid
 customerForm.get('firstName').valid
 
+To set the input values in template from the TS file:
 
 Set all values:
 --------------------
@@ -269,20 +282,20 @@ this.customerForm.valueChanges.subscribe(value => console.log(JSON.stringify(val
 	==> For entire form.
 
 Reacting (What you can do with the subscription)
-- Adjust validation rules 
+- Adjust validation rules
 - Handle validation messages
 - Modify user interface elements
 - Provide automatic suggestions
 
 debounceTime
-• Ignores events until a specific time has passed without another event
-• debounceTime(1000)waits for 1000 milliseconds (1 sec) of no events before emitting another event	<< Userful when use typing input.
+ï¿½ Ignores events until a specific time has passed without another event
+ï¿½ debounceTime(1000)waits for 1000 milliseconds (1 sec) of no events before emitting another event	<< Userful when use typing input.
 
 throttleTime
-•Emits a value, then ignores subsequent values for a specific amount of time	<< Useful when you receive way too many events when tracking mouse movement.
+ï¿½Emits a value, then ignores subsequent values for a specific amount of time	<< Useful when you receive way too many events when tracking mouse movement.
 
 distinctUntilChanged
-•Suppresses duplicate consecutive items
+ï¿½Suppresses duplicate consecutive items
 
 ##################################################
 ### Dynamically Duplicate Input Elements #########
@@ -412,15 +425,15 @@ Post vs Put
 POST (api/products)		<< I have some product data, proces it. without specific any ID.
 Posts data for a resource or set of resources
 Used to:
-• Create a new resource when the server assigns the Id
-• Update a set of resources
+ï¿½ Create a new resource when the server assigns the Id
+ï¿½ Update a set of resources
 Not idempotent			<< Issuing multiple request will not have the same effect as multiple put calls. It will just keep creating production.
 
 PUT (api/products/5)		<< Replace the product if the ID exist, if not found, create it.
 Puts data for a specific resource with an Id
 Used to:
-• Create a new resource when the client assigns the Id
-• Update the resource with the Id
+ï¿½ Create a new resource when the client assigns the Id
+ï¿½ Update the resource with the Id
 Idempotent			<< means multiple put call will not have effect if the input parameter is the same.
 
 

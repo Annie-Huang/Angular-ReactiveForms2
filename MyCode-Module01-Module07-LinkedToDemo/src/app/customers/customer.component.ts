@@ -70,6 +70,7 @@ export class CustomerComponent implements OnInit {
   ngOnInit() {
     // Set up form model. This is DIFFERENT FROM data modal.
 
+    // We selected to use ngOnInit (rather than the constructor) to ensure the component and template are initialized before building the form model.
     // this.customerForm = new FormGroup({
     //   firstName : new FormControl(),
     //   lastName : new FormControl(),
