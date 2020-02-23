@@ -1,7 +1,25 @@
-HTML Directive: formGroup | formControl | formControlName | formGroupName | formArrayName
-TS Class: FormGroup | FormControl | patchValue | setValue | FormBuilder
+Overall concepts of: Root FormGroup | FormControl For each input element | Nested FormGroups | Form Arrays
+
+HTML Directive: formGroup | formControl | formControlName | formGroupName (used for nested FormGroups) | formArrayName
+TS Class: FormGroup | FormControl | FormBuilder | Validators |
+  FormGroup.setValue
+  FormGroup.patchValue
+  FormControl.setValidators
+  FormControl.clearValidators
+  FormControl.updateValueAndValidity
+  const phoneControl = this.customerForm.get('phone');
+
+
+Topic: Reactive Form basic:
+Topic: FormBuilder VS 'FormGroup | FormControl'
+       Validator
+       Custom Validator
+Topic: Nested FormGroup:
+
 
 ##########################################################################################################
+Topic: Reactive Form basic:
+
 TS file:
 export class CustomerComponent implements OnInit {
   // Root FormGroup.
@@ -76,9 +94,9 @@ recipientGroup.get('name').patchValue(shipment.to.name)
 
 
 ##########################################################################################################
-
-
-FormBuilder VS 'FormGroup | FormControl'
+Topic: FormBuilder VS 'FormGroup | FormControl'
+       Validator
+       Custom Validator
 
 export class CustomerComponent implements OnInit {
   // Root FormGroup.
@@ -92,23 +110,101 @@ export class CustomerComponent implements OnInit {
 
     // The above can be replease with
     this.customerForm = this.fb.group({lastName : '',});
-    this.customerForm = this.fb.group({lastName : {value: 'n/a', disabled: true}   });
-    this.customerForm = this.fb.group({lastName : [{value: true, disabled: false}] });
-    this.customerForm = this.fb.group({lastName : ['', [Validators.required, Validators.maxLength(50)]]  });
   }
 }
 
+Validation list:
+    this.customerForm = this.fb.group({lastName : '',});
+    this.customerForm = this.fb.group({lastName : {value: 'n/a', disabled: true}   });
+    this.customerForm = this.fb.group({lastName : [{value: 'n/a', disabled: true}] });
+    this.customerForm = this.fb.group({lastName : [''] });
+    this.customerForm = this.fb.group({lastName : ['', Validators.required]  });  // the first element in the array is the default input element value
+    this.customerForm = this.fb.group({lastName : ['', [Validators.required, Validators.maxLength(50)]]  });  // If you have more than one validator, use another array to group them
+    // If there is a third attribute, e.g. yyy in the ['', [Validators.xxx,xxx], yyy], it is the async validators.
+
+
+Customer Validator:
+In TS file:
+    this.customerForm = this.fb.group({
+      rating: [null, ratingRange],     // set it for null because '' is not good for number
+      rating2: [null, ratingRange2(1,5)],     // set it for null because '' is not good for number
+    });
+    function ratingRange(c: AbstractControl): {[key: string]: boolean} | null {
+      if(c.value !== null && (isNaN(c.value) || c.value < 1 || c.value > 5)) {
+        return{ 'range': true};
+      }
+      return null;
+    }
+    function ratingRange2(min: number, max: number): ValidatorFn {
+      return (c: AbstractControl): { [key: string]: boolean } | null => {
+        if (c.value !== null && (isNaN(c.value) || c.value < min || c.value > max)) {
+          return {'range': true};
+        }
+        return null;  // null means no error.
+      }
+    }
+In HTML:
+            <span *ngIf="customerForm.get('rating').errors?.range">
+              Please rate your experience from 1 to 5.
+            </span>
 
 
 
+##########################################################################################################
+Topic: Nested FormGroup:
 
+TS File:
+    this.customerForm = this.fb.group({
+      emailGroup: this.fb.group({                                 <<<<<<< Need to match, point A
+        email : ['', [Validators.required, Validators.email]],    <<<<<<< Need to match, point B
+        confirmEmail : ['', [Validators.required]]                <<<<<<< Need to match, point C
+      }, { validator: emailMatcher})
+    });
+    function emailMatcher (c:AbstractControl): {[key: string]: boolean} | null {
+      let emailControl = c.get('email');
+      let confirmControl = c.get('confirmEmail');
+      if (emailControl.pristine  || confirmControl.pristine) {
+        return null;
+      }
+      if(emailControl.value === confirmControl.value) {
+        return null;
+      }
+      return { 'match': true};
+    }
 
+HTML File:
+      <div formGroupName="emailGroup">                            <<<<<<< Need to match, point A
+        <div>
+          <label for="emailId">Email</label>
+          <input id="emailId" type="email"
+                 formControlName="email"                          <<<<<<< Need to match, point B
+                [ngClass]="{'is-invalid':
+                    customerForm.get('emailGroup').errors ||
+                    ((customerForm.get('emailGroup.email').touched || customerForm.get('emailGroup.email').dirty)
+                    && !customerForm.get('emailGroup.email').valid) }" />         <<<<<<< Short form to get to email from email Form Group
+        </div>
 
+        <div>
+          <label for="confirmEmailId">Confirm Email</label>
+          <input id="confirmEmailId" type="email"
+                 formControlName="confirmEmail"                   <<<<<<< Need to match, point C
+                 [ngClass]="{'is-invalid':
+                      customerForm.get('emailGroup').errors ||
+                      ((customerForm.get('emailGroup.confirmEmail').touched || customerForm.get('emailGroup.confirmEmail').dirty)
+                      && !customerForm.get('emailGroup.confirmEmail').valid) }" />
+          <span *ngIf="customerForm.get('emailGroup.confirmEmail').errors?.required">
+            Please confirm your email address.
+          </span>
+          <span *ngIf="customerForm.get('emailGroup').errors?.match">
+            The confirmation does not match the email address.
+          </span>
+        </div>
+      </div>
 
-
-
-
-
+Note:
+1. To access From model properties to check validness:
+- customerForm.controls.emailGroup.controls.email.valid
+- customerForm.get('emailGroup.email').valid
 
 
 
