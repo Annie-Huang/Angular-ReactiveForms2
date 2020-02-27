@@ -8,6 +8,9 @@ TS Class: FormGroup | FormControl | FormBuilder | Validators |
   FormControl.clearValidators
   FormControl.updateValueAndValidity
   const phoneControl = this.customerForm.get('phone');
+  phoneControl.valueChanges.subscribe();
+  phoneControl.statusChanges.subscribe();
+  this.customerForm.valueChanges.subscribe(value => console.log(JSON.stringify(value)));
 
 
 Topic: Reactive Form basic:
@@ -28,7 +31,7 @@ export class CustomerComponent implements OnInit {
 
   ngOnInit() {
     // We selected to use ngOnInit (rather than the constructor) to ensure the component and template are initialized before building the form model.
-    this.customerForm = new FormGroup({
+    this.customerForm = new FormGroup({   <<<<<<< Need to match, point A
       firstName : new FormControl(),      <<<<<<< Need to match, point B
       lastName : new FormControl(),
       email : new FormControl(),
@@ -120,13 +123,13 @@ Validation list:
     this.customerForm = this.fb.group({lastName : [''] });
     this.customerForm = this.fb.group({lastName : ['', Validators.required]  });  // the first element in the array is the default input element value
     this.customerForm = this.fb.group({lastName : ['', [Validators.required, Validators.maxLength(50)]]  });  // If you have more than one validator, use another array to group them
-    // If there is a third attribute, e.g. yyy in the ['', [Validators.xxx,xxx], yyy], it is the async validators.
+    // If there is a third attribute, e.g. zzz in the ['', [Validators.xxx,yyy], zzz], it is the async validators.
 
 
 Customer Validator:
 In TS file:
     this.customerForm = this.fb.group({
-      rating: [null, ratingRange],     // set it for null because '' is not good for number
+      rating: [null, ratingRange],            // set it for null because '' is not good for number
       rating2: [null, ratingRange2(1,5)],     // set it for null because '' is not good for number
     });
     function ratingRange(c: AbstractControl): {[key: string]: boolean} | null {
@@ -207,22 +210,97 @@ Note:
 - customerForm.get('emailGroup.email').valid
 
 
+##########################################################################################################
+Topic: watching FromGroup and FromControl changes:
+
+Example one: watching to change validation rules.
+In TS File:
+  ngOnInit() {
+    this.customerForm.get('notification').valueChanges.subscribe(
+      value => this.setNotification(value)
+    );
+  }
+  setNotification(notifyVia: string): void {
+    const phoneControl = this.customerForm.get('phone');
+    if (notifyVia === 'text') {
+      phoneControl.setValidators(Validators.required);
+    } else {
+      phoneControl.clearValidators();
+    }
+    phoneControl.updateValueAndValidity();
+  }
 
 
+In HTML File:
+      <div>
+        <label>Send Notifications</label>
+        <div>
+          <div><label>
+              <input type="radio"
+                     value="email"
+                     formControlName="notification"> Email
+          </label></div>
+          <div><label>
+              <input type="radio"
+                     value="text"
+                     formControlName="notification"> Text
+          </label></div>
+        </div>
+      </div>
+
+So you don't need to have:
+              <input type="radio"
+                     value="email"
+                     formControlName="notification"
+                     (click)="setNotification('email')"> Email
 
 
+Another example: watching to display different error messages
+In TS File:
+  private validationMessages = {
+    required: 'Please enter your email address.',
+    email: 'Please enter a valid email address.',
+  };
+
+  ngOnInit() {
+    const emailControl = this.customerForm.get('emailGroup.email');      <<<<<<< Need to match, point A
+    emailControl.valueChanges.pipe(
+      debounceTime(1000)
+    ).subscribe(
+      value => this.setMessage(emailControl)
+    )
+  }
+
+  setMessage(c: AbstractControl): void {
+    this.emailMessage = '';                                              <<<<<<< Need to match, point B
+    if((c.touched || c.dirty) && c.errors) {
+      this.emailMessage = Object.keys(c.errors).map(
+        key => this.emailMessage += this.validationMessages[key]
+      ).join(' ');
+    }
+  }
+
+In HTML:
+  <div formGroupName="emailGroup">                                       <<<<<<< Need to match, point A
+    <label for="emailId">Email</label>
+    <input id="emailId"
+           type="email"
+           placeholder="Email (required)"
+           formControlName="email"                                       <<<<<<< Need to match, point A
+           [ngClass]="{'is-invalid': emailMessage }" />
+    <span>{{emailMessage}}</span>                                        <<<<<<< Need to match, point B
+    ...
+  </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
+Note:
+- DebounceTime ignores all events until a specified time has passed without another event.
+  For example, debounceTime(1000) waits for 1 second with no events before emitting another event.
+  This is very useful for validation, especially if you don't want to show the validation messages until the user has stopped typing.
+- ThrottleTime emits a value, then ignores subsequent values for a specified amount of time.
+  This is useful when you receive way too many events, as when tracking mouse movements.
+- DistinctUntilChanged suppresses duplicate consecutive items.
+  This is useful when tracking key events to prevent getting events when only the Ctrl or Shift keys are changed.
+  (good explanation in https://rxjs-dev.firebaseapp.com/api/operators/distinctUntilChanged)
 
 
