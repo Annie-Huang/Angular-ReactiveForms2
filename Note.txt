@@ -288,14 +288,14 @@ Reacting (What you can do with the subscription)
 - Provide automatic suggestions
 
 debounceTime
-� Ignores events until a specific time has passed without another event
-� debounceTime(1000)waits for 1000 milliseconds (1 sec) of no events before emitting another event	<< Userful when use typing input.
+- Ignores events until a specific time has passed without another event
+- debounceTime(1000)waits for 1000 milliseconds (1 sec) of no events before emitting another event	<< Userful when use typing input.
 
 throttleTime
-�Emits a value, then ignores subsequent values for a specific amount of time	<< Useful when you receive way too many events when tracking mouse movement.
+- Emits a value, then ignores subsequent values for a specific amount of time	<< Useful when you receive way too many events when tracking mouse movement.
 
 distinctUntilChanged
-�Suppresses duplicate consecutive items
+- Suppresses duplicate consecutive items
 
 ##################################################
 ### Dynamically Duplicate Input Elements #########
