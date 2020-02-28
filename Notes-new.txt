@@ -18,7 +18,7 @@ Topic: FormBuilder VS 'FormGroup | FormControl'
        Validator
        Custom Validator
 Topic: Nested FormGroup:
-
+Topic: Watching FromGroup and FromControl changes:
 
 ##########################################################################################################
 Topic: Reactive Form basic:
@@ -211,7 +211,7 @@ Note:
 
 
 ##########################################################################################################
-Topic: watching FromGroup and FromControl changes:
+Topic: Watching FromGroup and FromControl changes:
 
 Example one: watching to change validation rules.
 In TS File:
@@ -304,3 +304,120 @@ Note:
   (good explanation in https://rxjs-dev.firebaseapp.com/api/operators/distinctUntilChanged)
 
 
+
+##########################################################################################################
+Topic: Form Array.
+
+In TS File:
+  customerForm: FormGroup;
+  constructor(private fb: FormBuilder) { }
+
+  get addresses(): FormArray{                                             <<<<<<< Need to match, point B, C
+    return <FormArray>this.customerForm.get('addresses');                 <<<<<<< Need to match, point A
+  }
+
+  ngOnInit() {
+    this.customerForm = this.fb.group({
+      ...
+      addresses: this.fb.array([ this.buildAddress() ])                   <<<<<<< Need to match, point A.    If you don't need formArray, just do: addresses: this.buildAddress()
+    });
+  }
+
+  addAddress(): void {
+    this.addresses.push(this.buildAddress());                             <<<<<<< Need to match, point C, D. Add the a new set of data in FormGroup
+  }
+
+  buildAddress(): FormGroup {
+    return this.fb.group({
+      addressType: 'home',
+      street1: '',
+      street2: '',
+      city: '',
+      state: '',
+      zip: ''
+    })
+  }
+
+In HTML File:
+      <div *ngIf="customerForm.get('sendCatalog').value">
+        <div formArrayName="addresses" *ngFor="let address of addresses.controls; let i=index">           <<<<<<< Need to match, point B
+          <div [formGroupName]="i"> <!-- Start addresses group-->
+            <div>
+                    <input id="addressType1Id"
+                           type="radio"
+                           value="home"
+                           formControlName="addressType"> Home
+                    <input id="addressType1Id"
+                           type="radio"
+                           value="work"
+                           formControlName="addressType"> Work
+                    <input id="addressType1Id"
+                           type="radio"
+                           value="other"
+                           formControlName="addressType"> Other
+            </div>
+
+            <div>
+              <label attr.for="{{ 'street1Id' + i }}">Street Address 1</label>
+              <div><input id="{{ 'street1Id' + i }}"                                                       <<<<<<< Add i into the id to make it unique.
+                       type="text"
+                       placeholder="Street address"
+                       formControlName="street1"></div>
+            </div>
+
+            <div>
+              <label attr.for="{{ 'street2Id' + i }}">Street Address 2</label>
+              <div><input id="{{ 'street2Id' + i }}"
+                       type="text"
+                       placeholder="Street address (second line)"
+                       formControlName="street2"></div>
+              </div>
+            </div>
+
+            <div>
+                <input class="form-control"
+                       id="{{ 'cityId' + i }}"
+                       type="text"
+                       placeholder="City"
+                       formControlName="city">
+                <select class="form-control"
+                        id="{{ 'stateId' + i }}"
+                        formControlName="state">
+                  ... multiple <option> ...
+                </select>
+                <input id="{{ 'zipId' + i }}"
+                       type="number"
+                       placeholder="Zip Code"
+                       formControlName="zip">
+            </div>
+          </div>  <!-- End addresses group-->
+        </div>
+
+                    <button type="button"
+                            [disabled]="!addresses.valid"
+                            (click)="addAddress()">                       <<<<<<< Need to match, point D
+                      Add Another Address
+                    </button>
+      </div>
+
+
+Note:
+1. A FormArray is simply a group of FormControls or FormGroups that are conceptualized as an array.
+   Unlike a FormGroup, they are accessed by index instead of by name.
+   A FormArray can contain any number of FormControls or FormGroups, but they are often used for like items, such as multiple instances of the same FormControl or FormGroup.
+   Because each item in a FormArray does not need a unique name, they are great for sets that are dynamic or of unknown length.
+
+2. Creating a FormArray
+this.myArray= newFormArray([...]);
+this.myArray= this.fb.array([...]);
+
+3. Access to FormArray item:
+        <div formArrayName="addresses" *ngFor="let address of addresses.controls; let i=index">
+          <div [formGroupName]="i">                       --------
+              <input id="{{ 'street1Id' + i }}"
+                     type="text"
+                     placeholder="Street address"
+                     formControlName="street1">           --------
+          </div>
+        </div>
+<br>Street: {{ addresses.get('0.street1')?.value}}        --------
