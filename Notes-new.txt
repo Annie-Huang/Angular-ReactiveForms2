@@ -19,6 +19,8 @@ Topic: FormBuilder VS 'FormGroup | FormControl'
        Custom Validator
 Topic: Nested FormGroup:
 Topic: Watching FromGroup and FromControl changes:
+Topic: Form Array.
+Topic: Form Reset and setControl.
 
 ##########################################################################################################
 Topic: Reactive Form basic:
@@ -421,3 +423,55 @@ this.myArray= this.fb.array([...]);
           </div>
         </div>
 <br>Street: {{ addresses.get('0.street1')?.value}}        --------
+
+
+##########################################################################################################
+Topic: Form Reset and setControl.
+
+In product.edit.components:
+  productForm: FormGroup;
+
+  ngOnInit(): void {
+    this.productForm = this.fb.group({
+      productName: ['', [Validators.required,
+                        Validators.minLength(3),
+                        Validators.maxLength(50)]],
+      productCode: ['', Validators.required],
+      starRating: ['', NumberValidators.range(1, 5)],
+      tags: this.fb.array([]),
+      description: ''
+    });
+  }
+
+
+Note:
+1. Reset the FormGroup:
+  productForm: FormGroup;
+  this.productForm.reset();
+
+2. setControl:
+    this.productForm.setControl('tags', this.fb.array(this.product.tags || []));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
