@@ -453,10 +453,19 @@ Note:
     this.productForm.setControl('tags', this.fb.array(this.product.tags || []));
 
 
+##########################################################################################################
+If you want to create a empty FormGroup from FormBuilder, just keep the object empty:
 
+    const form = this.formBuilder.group({
+      from: this.formBuilder.control({ value: null, disabled: true }),
+      to: this.formBuilder.control(null),
+      items: this.formBuilder.array([this.buildItemForm(carrierMetadata, formCarrierType)]),
+      features: this.formBuilder.group({})
+    });
 
-
-
+features: this.formBuilder.group({})
+is the same as:
+form.addControl('features', new FormGroup({}));
 
 
 
