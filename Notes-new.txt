@@ -469,6 +469,22 @@ form.addControl('features', new FormGroup({}));
 
 
 
+  shipmentForm: FormGroup = new FormGroup({
+    additionalDetails: new FormGroup({
+      deliveryInstructions: new FormArray([new FormControl(null), new FormControl(null), new FormControl(null)]),
+      senderReferences: new FormArray([
+        new FormGroup({
+          reference: new FormControl('')
+        }),
+        new FormGroup({
+          reference: new FormControl('')
+        })
+      ])
+    })
+  });
+
+
+
 
 
 
