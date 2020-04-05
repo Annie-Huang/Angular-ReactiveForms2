@@ -218,8 +218,8 @@ Topic: Watching FromGroup and FromControl changes:
 Example one: watching to change validation rules.
 In TS File:
   ngOnInit() {
-    this.customerForm.get('notification').valueChanges.subscribe(
-      value => this.setNotification(value)
+    this.customerForm.get('notification').valueChanges.subscribe(             <<< Important!!! In order to check for valuleChanges and apply updateValueAndValidity(), you have to put
+      value => this.setNotification(value)                                        the customerForm creation, Form's FromControl's valuleChanges subscribe WITHIN the ngOnInit
     );
   }
   setNotification(notifyVia: string): void {
