@@ -315,8 +315,8 @@ In TS File:
   constructor(private fb: FormBuilder) { }
 
   get addresses(): FormArray{                                             <<<<<<< Need to match, point B, C
-    return <FormArray>this.customerForm.get('addresses');                 <<<<<<< Need to match, point A
-  }
+    return <FormArray>this.customerForm.get('addresses');                 <<<<<<< Need to match, point A. When you use FormArray, you will need to cast it.
+  }                                                                               Do this or "return this.customerForm.get('addresses') as FormArray;"
 
   ngOnInit() {
     this.customerForm = this.fb.group({
